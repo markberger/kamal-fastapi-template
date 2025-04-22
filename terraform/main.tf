@@ -60,7 +60,7 @@ resource "digitalocean_droplet" "droplet" {
   size     = var.droplet_size
   ssh_keys = [digitalocean_ssh_key.default.fingerprint]
 
-  # Add cloud-init configuration to create user, set up SSH, and pass Spaces credentials to the droplet
+  # Add cloud-init configuration to perform init server setup + kamal requirements
   user_data = <<-EOF
     #cloud-config
 
