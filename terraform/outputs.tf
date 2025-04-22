@@ -28,34 +28,6 @@ output "ssh_config_instructions" {
   value       = "Ensure you have 'Include ~/.ssh/config.d/*' in your ~/.ssh/config file"
 }
 
-# Spaces bucket outputs
-output "spaces_bucket_name" {
-  description = "Name of the DigitalOcean Spaces bucket"
-  value       = digitalocean_spaces_bucket.backup_bucket.name
-}
-
-output "spaces_bucket_endpoint" {
-  description = "Endpoint URL for the DigitalOcean Spaces bucket"
-  value       = digitalocean_spaces_bucket.backup_bucket.bucket_domain_name
-}
-
-output "spaces_access_key" {
-  description = "Access key for the DigitalOcean Spaces bucket"
-  value       = digitalocean_spaces_key.backup_key.access_key
-  sensitive   = true
-}
-
-output "spaces_secret_key" {
-  description = "Secret key for the DigitalOcean Spaces bucket"
-  value       = digitalocean_spaces_key.backup_key.secret_key
-  sensitive   = true
-}
-
-output "spaces_bucket_policy_applied" {
-  description = "Indicates that a policy has been applied to the bucket granting read/write access (excluding delete) to the backup key"
-  value       = "Policy applied: Read/Write access (excluding delete operations) for ${digitalocean_spaces_bucket.backup_bucket.name}"
-}
-
 output "security_updates_configured" {
   description = "Indicates that automatic security updates have been configured on the server"
   value       = "Automatic security updates configured using unattended-upgrades package with daily checks and automatic installation of security patches"

@@ -24,11 +24,6 @@ provider "digitalocean" {
   # If var.do_token is set, it will override the environment variable
   token = var.do_token
 
-  # Configure Spaces credentials
-  # These will use SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY environment variables by default
-  # If var.spaces_access_key and var.spaces_secret_key are set, they will override the environment variables
-  spaces_access_id  = var.spaces_access_key
-  spaces_secret_key = var.spaces_secret_key
 }
 
 # Generate an SSH key pair
@@ -79,25 +74,6 @@ resource "digitalocean_droplet" "droplet" {
           - ${tls_private_key.ssh_key.public_key_openssh}
 
     write_files:
-      # Create s3cmd config file with Spaces credentials
-      - path: /root/.s3cfg
-        content: |
-          [default]
-          access_key = ${digitalocean_spaces_key.backup_key.access_key}
-          secret_key = ${digitalocean_spaces_key.backup_key.secret_key}
-          host_base = ${var.spaces_region}.digitaloceanspaces.com
-          host_bucket = %(bucket)s.${var.spaces_region}.digitaloceanspaces.com
-        permissions: '0600'
-      
-      # Add environment variables for applications that need Spaces access
-      - path: /etc/environment
-        append: true
-        content: |
-          DO_SPACES_ACCESS_KEY=${digitalocean_spaces_key.backup_key.access_key}
-          DO_SPACES_SECRET_KEY=${digitalocean_spaces_key.backup_key.secret_key}
-          DO_SPACES_ENDPOINT=${var.spaces_region}.digitaloceanspaces.com
-          DO_SPACES_BUCKET=${digitalocean_spaces_bucket.backup_bucket.name}
-
       # Configure SSH for secure access (only app user with public key)
       - path: /etc/ssh/sshd_config.d/99-secure-ssh.conf
         content: |
@@ -173,16 +149,7 @@ resource "digitalocean_droplet" "droplet" {
     runcmd:
       # Update package lists and install required packages
       - apt-get update
-      - apt-get install -y s3cmd ufw fail2ban unattended-upgrades apt-listchanges
-      
-      # Test the connection to Spaces
-      - s3cmd ls s3://${digitalocean_spaces_bucket.backup_bucket.name}
-
-      # Copy the s3cmd config to app's home directory
-      - mkdir -p /home/app/.ssh
-      - cp /root/.s3cfg /home/app/
-      - chown app:app /home/app/.s3cfg
-      - chmod 600 /home/app/.s3cfg
+      - apt-get install -y ufw fail2ban unattended-upgrades apt-listchanges
 
       # Restart SSH service to apply new configuration
       - systemctl restart sshd
@@ -295,48 +262,4 @@ Host ${var.app_name}
       echo 'Include ~/.ssh/config.d/*'
     EOT
   }
-}
-
-# Create a DigitalOcean Spaces bucket for backups
-resource "digitalocean_spaces_bucket" "backup_bucket" {
-  name   = var.spaces_bucket_name != null ? var.spaces_bucket_name : "${var.app_name}-backups"
-  region = var.spaces_region
-  acl    = "private"
-}
-
-# Create a Spaces access key for programmatic access
-resource "digitalocean_spaces_key" "backup_key" {
-  name = "${var.app_name}-backup-key"
-}
-
-# Create a bucket policy to grant read/write access (excluding delete) to the backup bucket for the backup key
-resource "digitalocean_spaces_bucket_policy" "backup_bucket_policy" {
-  region = var.spaces_region
-  bucket = digitalocean_spaces_bucket.backup_bucket.name
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Sid" : "ReadWriteAccess",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:aws:iam::${digitalocean_spaces_key.backup_key.access_key}:user/${var.app_name}-backup-key"
-        },
-        "Action" : [
-          "s3:GetObject",
-          "s3:GetBucketLocation",
-          "s3:ListBucket",
-          "s3:ListBucketMultipartUploads",
-          "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:AbortMultipartUpload",
-          "s3:ListMultipartUploadParts"
-        ],
-        "Resource" : [
-          "arn:aws:s3:::${digitalocean_spaces_bucket.backup_bucket.name}",
-          "arn:aws:s3:::${digitalocean_spaces_bucket.backup_bucket.name}/*"
-        ]
-      }
-    ]
-  })
 }
