@@ -1,0 +1,23 @@
+# Name of your application / server
+# app_name = "myapp"
+
+# Your DigitalOcean API token (optional if DIGITALOCEAN_TOKEN environment variable is set)
+# do_token = "your_digitalocean_api_token_here"
+
+# Optional: Override the default region (default: nyc1)
+# region = "sfo3"
+
+# Optional: Override the default droplet size (default: s-1vcpu-1gb)
+# droplet_size = "s-2vcpu-2gb"
+
+# Optional: Override the default Spaces bucket name (default: ${app_name}-backups)
+# spaces_bucket_name = "myapp-backups"
+
+# Optional: Override the default Spaces region (default: sfo2)
+# spaces_region = "nyc3"
+
+# Your DigitalOcean Spaces access key (optional if SPACES_ACCESS_KEY_ID environment variable is set)
+# spaces_access_key = "your_spaces_access_key_here"
+
+# Your DigitalOcean Spaces secret key (optional if SPACES_SECRET_ACCESS_KEY environment variable is set)
+# spaces_secret_key = "your_spaces_secret_key_here"
