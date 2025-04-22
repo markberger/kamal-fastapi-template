@@ -16,6 +16,9 @@ brew install hashicorp/tap/terraform
 
 # kamal
 gem install kamal
+
+# dotenvx for secrets
+brew install dotenvx/brew/dotenvx
 ```
 
 ## Deploy Droplet
